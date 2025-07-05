@@ -1,3 +1,4 @@
+
 package com.github.laz061.renderer3d;
 
 import java.awt.*;
@@ -51,13 +52,32 @@ public class Main {
                 // moves to center
                 g2.translate(getWidth() / 2, getHeight() / 2);
 
+                double yawAngle = Math.toRadians(yawSlider.getValue());
+                Matrix yawTransform = new Matrix(new double[] {
+                        Math.cos(yawAngle), 0, -Math.sin(yawAngle),
+                        0, 1, 0,
+                        Math.sin(yawAngle), 0, Math.cos(yawAngle)
+                });
+
+                double pitchAngle = Math.toRadians(pitchSlider.getValue());
+                Matrix pitchTransform = new Matrix(new double[] {
+                        1, 0, 0,
+                        0, Math.cos(pitchAngle), Math.sin(pitchAngle),
+                        0, -Math.sin(pitchAngle), Math.cos(pitchAngle)
+                });
+
+                Matrix totalTransform = yawTransform.multiply(pitchTransform);
+
                 // draws four triangles forming tetrahedral
                 for (Triangle t : tris) {
                     g2.setColor(t.color);
+                    Vertex v1 = totalTransform.transform(t.v1);
+                    Vertex v2 = totalTransform.transform(t.v2);
+                    Vertex v3 = totalTransform.transform(t.v3);
                     Path2D path = new Path2D.Double();
-                    path.moveTo(t.v1.x, t.v1.y);
-                    path.lineTo(t.v2.x, t.v2.y);
-                    path.lineTo(t.v3.x, t.v3.y);
+                    path.moveTo(v1.x, v1.y);
+                    path.lineTo(v2.x, v2.y);
+                    path.lineTo(v3.x, v3.y);
                     path.closePath();
                     g2.draw(path);
                 }
@@ -66,6 +86,9 @@ public class Main {
         };
 
         pane.add(renderPanel, BorderLayout.CENTER);
+
+        yawSlider.addChangeListener(e -> renderPanel.repaint());
+        pitchSlider.addChangeListener(e -> renderPanel.repaint());
 
         frame.setSize(400, 400);
         frame.setVisible(true);

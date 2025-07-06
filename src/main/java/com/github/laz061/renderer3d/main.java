@@ -3,6 +3,7 @@ package com.github.laz061.renderer3d;
 
 import java.awt.*;
 import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
 
 import javax.swing.*;
 import java.util.List;
@@ -49,9 +50,6 @@ public class Main {
                 g2.setColor(Color.BLACK);
                 g2.fillRect(0, 0, getWidth(), getHeight());
 
-                // moves to center
-                g2.translate(getWidth() / 2, getHeight() / 2);
-
                 double yawAngle = Math.toRadians(yawSlider.getValue());
                 Matrix yawTransform = new Matrix(new double[] {
                         Math.cos(yawAngle), 0, -Math.sin(yawAngle),
@@ -68,19 +66,52 @@ public class Main {
 
                 Matrix totalTransform = yawTransform.multiply(pitchTransform);
 
+                BufferedImage img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+
                 // draws four triangles forming tetrahedral
                 for (Triangle t : tris) {
                     g2.setColor(t.color);
                     Vertex v1 = totalTransform.transform(t.v1);
                     Vertex v2 = totalTransform.transform(t.v2);
                     Vertex v3 = totalTransform.transform(t.v3);
-                    Path2D path = new Path2D.Double();
-                    path.moveTo(v1.x, v1.y);
-                    path.lineTo(v2.x, v2.y);
-                    path.lineTo(v3.x, v3.y);
-                    path.closePath();
-                    g2.draw(path);
+                    // we have to do translation manually
+                    v1.x += getWidth() / 2;
+                    v1.y += getHeight() / 2;
+                    v2.x += getWidth() / 2;
+                    v2.y += getHeight() / 2;
+                    v3.x += getWidth() / 2;
+                    v3.y += getHeight() / 2;
+
+                    // compute rectangular bounds for triangle
+                    int minX = (int) Math.max(0, Math.ceil(Math.min(v1.x, Math.min(v2.x, v3.x))));
+                    int maxX = (int) Math.min(img.getWidth() - 1,
+                            Math.floor(Math.max(v1.x, Math.max(v2.x, v3.x))));
+                    int minY = (int) Math.max(0, Math.ceil(Math.min(v1.y, Math.min(v2.y, v3.y))));
+                    int maxY = (int) Math.min(img.getHeight() - 1,
+                            Math.floor(Math.max(v1.y, Math.max(v2.y, v3.y))));
+
+                    // calculates the parallellogram area using v3->v1 and v3->v2
+                    double triangleArea = (v1.y - v3.y) * (v2.x - v3.x) - (v1.x - v3.x) * (v2.y - v3.y);
+
+                    // loops through all pixels in the rectangle encapsulating the triangle
+                    for (int y = minY; y <= maxY; y++) {
+                        for (int x = minX; x <= maxX; x++) {
+                            // v3 -> p and v3 -> v2 area
+                            double b1 = ((y - v3.y) * (v2.x - v3.x) + (v2.y - v3.y) * (v3.x - x)) / triangleArea;
+
+                            // v1 -> p and v1 -> v3
+                            double b2 = ((y - v1.y) * (v3.x - v1.x) + (v3.y - v1.y) * (v1.x - x)) / triangleArea;
+
+                            // v2 -> p and v2 -> v1
+                            double b3 = ((y - v2.y) * (v1.x - v2.x) + (v1.y - v2.y) * (v2.x - x)) / triangleArea;
+                            if (b1 >= 0 && b1 <= 1 && b2 >= 0 && b2 <= 1 && b3 >= 0 && b3 <= 1) {
+                                img.setRGB(x, y, t.color.getRGB());
+                            }
+                        }
+                    }
                 }
+
+                g2.drawImage(img, 0, 0, null);
 
             }
         };

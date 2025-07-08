@@ -4,6 +4,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 import javax.swing.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class RenderPanel extends JPanel {
@@ -12,11 +14,15 @@ public class RenderPanel extends JPanel {
     private JSlider yawSlider;
     private JSlider pitchSlider;
 
-    public RenderPanel(List<Triangle> tris, JSlider y, JSlider p) {
-        this.tris = tris;
+    public RenderPanel(JSlider y, JSlider p) {
+        this.tris = new ArrayList<>();
         this.yawSlider = y;
         this.pitchSlider = p;
         setPreferredSize(new Dimension(600, 600));
+    }
+
+    public void setShape(List<Triangle> tris) {
+        this.tris = tris;
     }
 
     @Override

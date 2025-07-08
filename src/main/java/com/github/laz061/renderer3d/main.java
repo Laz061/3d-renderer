@@ -1,17 +1,18 @@
-
 package com.github.laz061.renderer3d;
 
+import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
 import java.awt.*;
-
 import javax.swing.*;
-import javax.swing.border.Border;
-
 import java.util.List;
 import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
-        JFrame frame = new JFrame();
+
+        FlatDarkLaf.setup();
+
+        JFrame frame = new JFrame("3D Renderer");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         Container pane = frame.getContentPane();
@@ -25,10 +26,23 @@ public class Main {
         JSlider pitchSlider = new JSlider(SwingConstants.VERTICAL, -90, 90, 0);
         pane.add(pitchSlider, BorderLayout.EAST);
 
-        List<Triangle> Tris = createTetrahedron();
-
-        RenderPanel renderPanel = new RenderPanel(Tris, yawSlider, pitchSlider);
+        RenderPanel renderPanel = new RenderPanel(yawSlider, pitchSlider);
         pane.add(renderPanel, BorderLayout.CENTER);
+
+        // Control panel
+        JPanel controlPanel = new JPanel();
+        controlPanel.setLayout(new BorderLayout());
+        controlPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JButton tetrahedronButton = new JButton("Tetrahedron");
+        controlPanel.add(tetrahedronButton);
+
+        tetrahedronButton.addActionListener(e -> {
+            renderPanel.setShape(createTetrahedron());
+            renderPanel.repaint();
+        });
+
+        pane.add(controlPanel, BorderLayout.WEST);
 
         yawSlider.addChangeListener(e -> renderPanel.repaint());
         pitchSlider.addChangeListener(e -> renderPanel.repaint());

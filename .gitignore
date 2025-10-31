@@ -3,6 +3,7 @@ target/
 *.jar
 *.war
 *.ear
+dependency-reduced-pom.xml
 
 # System files
 .DS_Store
@@ -14,3 +15,6 @@ Thumbs.db
 # Env files
 .env
 *.properties
+
+# VS Code
+.vscode/settings.json
